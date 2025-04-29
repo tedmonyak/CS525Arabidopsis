@@ -33,12 +33,11 @@ def one_hot_encode(seq):
         oneHotEncode[nucleotide_indexes[n.lower()], i] = nucleotide_values[n.lower()]
     return oneHotEncode
 
-def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7, 
-              test_training_data_to_load:float=500, val_data_to_load:float=100):
+def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.8, 
+              train_val_data_to_load:float=500, test_data_to_load:float=100):
     # get the .fasta files in data_dir
-    fasta_files = [f for f in os.listdir(data_dir) if 'fasta' in f]
-    faste_files = [f for f in os.listdir(data_dir) if 'faste' in f]
-
+    fasta_files = [os.path.join(data_dir,f) for f in os.listdir(data_dir) if 'fasta' in f]
+    faste_files = [os.path.join(data_dir,f) for f in os.listdir(data_dir) if 'faste' in f]
 
     # find the parts of the fasta files that is apart of val_chr
     X_chr = []
@@ -47,59 +46,59 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
             char  = (record.id).split(',')[0]
             X_chr.append(char)
 
-    testing_training_index = np.array([i for i, chr in enumerate(X_chr) if chr != val_chr])
-    val_indices = np.array([i for i, chr in enumerate(X_chr) if chr == val_chr])
+    train_val_indices = np.array([i for i, chr in enumerate(X_chr) if chr != test_chr])
+    test_indices = np.array([i for i, chr in enumerate(X_chr) if chr == test_chr])
 
-    testing_training_index = testing_training_index[:min(test_training_data_to_load, len(testing_training_index))]
-    val_indices = val_indices[:min(val_data_to_load, len(val_indices))]
+    train_val_indices = train_val_indices[:min(train_val_data_to_load, len(train_val_indices))]
+    test_indices = test_indices[:min(test_data_to_load, len(test_indices))]
 
 
     # Load the the sequences
-    X_val = []
+    X_test = []
     with open(fasta_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-            if i in val_indices:
-                X_val.append(one_hot_encode(record.seq))
+            if i in test_indices:
+                X_test.append(one_hot_encode(record.seq))
 
-    X_training_testing = []
+    X_train_val = []
     with open(fasta_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-            if i in testing_training_index:
-                X_training_testing.append(one_hot_encode(record.seq))
+            if i in train_val_indices:
+                X_train_val.append(one_hot_encode(record.seq))
 
-    Y_val = []
+    Y_test = []
     with open(faste_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-            if i in val_indices:
-                Y_val.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+            if i in test_indices:
+                Y_test.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
 
-    Y_training_testing = []
+    Y_train_val = []
     with open(faste_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-            if i in testing_training_index:
-                Y_training_testing.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+            if i in train_val_indices:
+                Y_train_val.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
     
 
     # Split the trainig and testing data
-    x_train, x_test, y_train, y_test = train_test_split(
-        X_training_testing, Y_training_testing, test_size=(1 - training_testing_split), random_state=42
+    x_train, x_val, y_train, y_val = train_test_split(
+        X_train_val, Y_train_val, test_size=(1 - train_val_split), random_state=42
     )
 
 
     # put the data into a dataloader
     training_dataset = chromatin_dataset([(x,y) for x,y in zip(x_train, y_train)])
-    testing_dataset = chromatin_dataset([(x,y) for x,y in zip(x_test, y_test)])
-    validation_dataset = chromatin_dataset([(x,y) for x,y in zip(X_val, Y_val)])
+    validation_dataset = chromatin_dataset([(x,y) for x,y in zip(x_val, y_val)])
+    testing_dataset = chromatin_dataset([(x,y) for x,y in zip(X_test, Y_test)])
 
-    return training_dataset, testing_dataset, validation_dataset
+    return training_dataset, validation_dataset, testing_dataset
 
 
 if __name__ == '__main__':
     cwd = os.getcwd()
-    training_dataset, testing_dataset, validation_dataset = load_data(cwd)
+    training_dataset, validation_dataset, testing_dataset = load_data(cwd)
     print(len(training_dataset))
-    print(len(testing_dataset))
     print(len(validation_dataset))
+    print(len(testing_dataset))
     print(training_dataset[0])
 
 
