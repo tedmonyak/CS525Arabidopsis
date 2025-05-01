@@ -60,7 +60,7 @@ def download_accessiblility_data():
 
 
 if __name__ == '__main__':
-    # download_reference_genome()
+    download_reference_genome()
     download_accessiblility_data()
 
 
