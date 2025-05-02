@@ -59,12 +59,16 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
             if i in val_indices:
                 X_val.append(one_hot_encode(record.seq))
+            if i > max(val_indices):
+                break
 
     X_training_testing = []
     with open(fasta_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
             if i in testing_training_index:
                 X_training_testing.append(one_hot_encode(record.seq))
+            if i > max(testing_training_index):
+                break
 
     Y_val = []
     for s in faste_files:
@@ -73,6 +77,8 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in val_indices:
                     Y.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+                if i > max(val_indices):
+                    break
         Y_val.append(Y)
 
     Y_training_testing = []
@@ -82,6 +88,8 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in testing_training_index:
                     Y.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+                if i > max(testing_training_index):
+                    break
         Y_training_testing.append(Y)
     
     # Reorder Y from (Tissue, Seq) -> (Seq, Tissue)
@@ -93,6 +101,12 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
     X_val = np.array(X_val)
     X_training_testing = np.array(X_training_testing)
 
+    # Discretize Y
+    Y_training_testing = np.sum(Y_training_testing, axis=-1)
+    Y_val = np.mean(Y_val, axis=-1)
+
+
+
     # Split the trainig and testing data
     x_train, x_test, y_train, y_test = train_test_split(
         X_training_testing, Y_training_testing, test_size=(1 - training_testing_split), random_state=42
@@ -103,7 +117,7 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
     testing_dataset = chromatin_dataset([(x,y) for x,y in zip(x_test, y_test)])
     validation_dataset = chromatin_dataset([(x,y) for x,y in zip(X_val, Y_val)])
 
-    return training_dataset, testing_dataset, validation_dataset
+    return [training_dataset, testing_dataset, validation_dataset]
 
 
 if __name__ == '__main__':
