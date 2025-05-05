@@ -33,89 +33,89 @@ def one_hot_encode(seq):
         oneHotEncode[nucleotide_indexes[n.lower()], i] = nucleotide_values[n.lower()]
     return oneHotEncode
 
-def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7, 
-              test_training_data_to_load:float=500, val_data_to_load:float=100):
+def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7, 
+              train_val_data_to_load:float=500, test_data_to_load:float=100):
     # get the .fasta files in data_dir
     fasta_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'fasta' in f]
     faste_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'faste' in f]
 
 
-    # find the parts of the fasta files that is apart of val_chr
+    # find the parts of the fasta files that is a part of test_chr
     X_chr = []
     with open(fasta_files[0], "rt") as handle:
         for record in SeqIO.parse(handle, "fasta"):
             char  = (record.id).split(',')[0]
             X_chr.append(char)
 
-    testing_training_index = np.array([i for i, chr in enumerate(X_chr) if chr != val_chr])
-    val_indices = np.array([i for i, chr in enumerate(X_chr) if chr == val_chr])
+    train_val_indices = np.array([i for i, chr in enumerate(X_chr) if chr != test_chr])
+    test_indices = np.array([i for i, chr in enumerate(X_chr) if chr == test_chr])
 
-    testing_training_index = testing_training_index[:min(test_training_data_to_load, len(testing_training_index))]
-    val_indices = val_indices[:min(val_data_to_load, len(val_indices))]
+    train_val_indices = train_val_indices[:min(train_val_data_to_load, len(train_val_indices))]
+    test_indices = test_indices[:min(test_data_to_load, len(test_indices))]
 
     # Load the the sequences
-    X_val = []
-    X_training_testing = []
+    X_test = []
+    X_train_val = []
     print(f'Loading sequences from {os.path.basename(fasta_files[0])}')
     with open(fasta_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-            if i in val_indices:
-                X_val.append(one_hot_encode(record.seq))
-            if i in testing_training_index:
-                X_training_testing.append(one_hot_encode(record.seq))
-            if i > np.max(val_indices) and i > np.max(testing_training_index):
+            if i in test_indices:
+                X_test.append(one_hot_encode(record.seq))
+            if i in train_val_indices:
+                X_train_val.append(one_hot_encode(record.seq))
+            if i > np.max(test_indices) and i > np.max(train_val_indices):
                 break
 
-    Y_val = []
-    Y_training_testing = []
+    Y_test = []
+    Y_train_val = []
     for s in faste_files:
         print(f'Loading coverage from {os.path.basename(s)}')
         Y0 = []
         Y1 = []
         with open(s, "rt") as handle:
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-                if i in val_indices:
+                if i in test_indices:
                     Y0.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
-                if i in testing_training_index:
+                if i in train_val_indices:
                     Y1.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
-                if len(val_indices) > 0 and i > np.max(val_indices, 0):
+                if i > np.max(test_indices) and i > np.max(train_val_indices):
                     break
-        Y_val.append(Y0)
-        Y_training_testing.append(Y1)
+        Y_test.append(Y0)
+        Y_train_val.append(Y1)
     
     # Reorder Y from (Tissue, Seq) -> (Seq, Tissue)
-    Y_training_testing = np.array(Y_training_testing)
-    Y_val = np.array(Y_val)
-    Y_training_testing = np.swapaxes(Y_training_testing, 0, 1)
-    Y_val = np.swapaxes(Y_val, 0, 1)
+    Y_train_val = np.array(Y_train_val)
+    Y_test = np.array(Y_test)
+    Y_train_val = np.swapaxes(Y_train_val, 0, 1)
+    Y_test = np.swapaxes(Y_test, 0, 1)
 
-    X_val = np.array(X_val)
-    X_training_testing = np.array(X_training_testing)
+    X_test = np.array(X_test)
+    X_train_val = np.array(X_train_val)
 
     # Discretize Y
-    Y_training_testing = np.sum(Y_training_testing, axis=-1)
-    Y_val = np.mean(Y_val, axis=-1)
+    Y_train_val = np.sum(Y_train_val, axis=-1)
+    Y_test = np.mean(Y_test, axis=-1)
 
 
 
     # Split the trainig and testing data
-    x_train, x_test, y_train, y_test = train_test_split(
-        X_training_testing, Y_training_testing, test_size=(1 - training_testing_split), random_state=42
+    x_train, x_val, y_train, y_val = train_test_split(
+        X_train_val, Y_train_val, test_size=(1 - train_val_split), random_state=42
     )
 
     # put the data into a dataloader
     training_dataset = chromatin_dataset([(x,y) for x,y in zip(x_train, y_train)])
-    testing_dataset = chromatin_dataset([(x,y) for x,y in zip(x_test, y_test)])
-    validation_dataset = chromatin_dataset([(x,y) for x,y in zip(X_val, Y_val)])
+    validation_dataset = chromatin_dataset([(x,y) for x,y in zip(x_val, y_val)])
+    testing_dataset = chromatin_dataset([(x,y) for x,y in zip(X_test, Y_test)])
 
-    return [training_dataset, testing_dataset, validation_dataset]
+    return [training_dataset, validation_dataset, testing_dataset]
 
 
 if __name__ == '__main__':
     training_dataset, testing_dataset, validation_dataset = load_data(os.path.join(os.getcwd(), 'Data', 'Parsed_Data'), test_training_data_to_load=10, val_data_to_load=10)
     print(len(training_dataset))
-    print(len(testing_dataset))
     print(len(validation_dataset))
+    print(len(testing_dataset))
     print(training_dataset[0])
 
 
