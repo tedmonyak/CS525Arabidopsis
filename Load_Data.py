@@ -55,42 +55,33 @@ def load_data(data_dir:str, val_chr:str='Chr5', training_testing_split:float=0.7
 
     # Load the the sequences
     X_val = []
+    X_training_testing = []
+    print(f'Loading sequences from {os.path.basename(fasta_files[0])}')
     with open(fasta_files[0], "rt") as handle:
         for i, record in enumerate(SeqIO.parse(handle, "fasta")):
             if i in val_indices:
                 X_val.append(one_hot_encode(record.seq))
-            if i > max(val_indices):
-                break
-
-    X_training_testing = []
-    with open(fasta_files[0], "rt") as handle:
-        for i, record in enumerate(SeqIO.parse(handle, "fasta")):
             if i in testing_training_index:
                 X_training_testing.append(one_hot_encode(record.seq))
-            if i > max(testing_training_index):
+            if i > np.max(val_indices) and i > np.max(testing_training_index):
                 break
 
     Y_val = []
-    for s in faste_files:
-        Y = []
-        with open(faste_files[0], "rt") as handle:
-            for i, record in enumerate(SeqIO.parse(handle, "fasta")):
-                if i in val_indices:
-                    Y.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
-                if i > max(val_indices):
-                    break
-        Y_val.append(Y)
-
     Y_training_testing = []
     for s in faste_files:
-        Y = []
+        print(f'Loading coverage from {os.path.basename(s)}')
+        Y0 = []
+        Y1 = []
         with open(s, "rt") as handle:
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
+                if i in val_indices:
+                    Y0.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
                 if i in testing_training_index:
-                    Y.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
-                if i > max(testing_training_index):
+                    Y1.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+                if len(val_indices) > 0 and i > np.max(val_indices, 0):
                     break
-        Y_training_testing.append(Y)
+        Y_val.append(Y0)
+        Y_training_testing.append(Y1)
     
     # Reorder Y from (Tissue, Seq) -> (Seq, Tissue)
     Y_training_testing = np.array(Y_training_testing)
