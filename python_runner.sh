@@ -4,8 +4,8 @@
 #SBATCH --partition=all             # Use the GPU partition
 #SBATCH --job-name=Image_Processing # Job name
 #SBATCH --ntasks=1                  # Number of tasks
-#SBATCH --output=job_output_%j.log  # Redirect output to a file with job ID
-#SBATCH --error=job_error_%j.log    # Redirect errors to a file with job ID
+# # SBATCH --output=job_output_%j.log  # Redirect output to a file with job ID
+# # SBATCH --error=job_error_%j.log    # Redirect errors to a file with job ID
 #SBATCH --no-requeue
 #SBATCH --exclusive                 # Limit to one job per node
 
@@ -28,12 +28,11 @@ mkdir -p "${PWD}/output"
 # Correct output file name
 output_names="${PWD}/output/output_${SLURM_JOB_ID}_$(basename ${fileLocation})"
 
-# Activate the environment and run the script
-source ../venv/bin/activate
+source venv/bin/activate
 if [ -z "$args" ]; then
-    python "$fileLocation" >> "$output_names" 2>&1 &
+    python "$fileLocation" >> "$output_names" 2>&1
 else
-    python "$fileLocation" "$args" >> "$output_names" 2>&1 &
+    python "$fileLocation" "$args" >> "$output_names" 2>&1
 fi
 wait
 
