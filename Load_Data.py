@@ -68,17 +68,17 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
 
     Y_test = []
     Y_train_val = []
-    for s in faste_files:
-        print(f'Loading coverage from {os.path.basename(s)}')
+    for f in faste_files:
+        print(f'Loading coverage from {os.path.basename(f)}')
         Y0 = []
         Y1 = []
-        with open(s, "rt") as handle:
+        with open(f, "rt") as handle:
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in test_indices:
                     Y0.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
                 if i in train_val_indices:
                     Y1.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
-                if i > np.max(test_indices) and i > np.max(train_val_indices):
+                if len(test_indices) > 0 and i > np.max(test_indices, 0):
                     break
         Y_test.append(Y0)
         Y_train_val.append(Y1)
@@ -94,9 +94,7 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
 
     # Discretize Y
     Y_train_val = np.sum(Y_train_val, axis=-1)
-    Y_test = np.mean(Y_test, axis=-1)
-
-
+    Y_test = np.sum(Y_test, axis=-1)
 
     # Split the trainig and testing data
     x_train, x_val, y_train, y_val = train_test_split(
@@ -112,11 +110,11 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
 
 
 if __name__ == '__main__':
-    training_dataset, testing_dataset, validation_dataset = load_data(os.path.join(os.getcwd(), 'Data', 'Parsed_Data'), test_training_data_to_load=10, val_data_to_load=10)
+    training_dataset, validation_dataset, testing_dataset = load_data(os.path.join(os.getcwd(), 'Data', 'Parsed_Data'), train_val_data_to_load=10, test_data_to_load=10)
     print(len(training_dataset))
     print(len(validation_dataset))
     print(len(testing_dataset))
-    print(training_dataset[0])
+    print(testing_dataset[0])
 
 
 
