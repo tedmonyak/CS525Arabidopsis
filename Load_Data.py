@@ -68,7 +68,7 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
 
     Y_test = []
     Y_train_val = []
-    for f in faste_files[0:2]:
+    for f in faste_files:
         print(f'Loading coverage from {os.path.basename(f)}')
         Y0 = []
         Y1 = []
