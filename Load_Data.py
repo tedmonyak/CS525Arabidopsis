@@ -95,6 +95,9 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     # Discretize Y
     Y_train_val = np.sum(Y_train_val, axis=-1)
     Y_test = np.sum(Y_test, axis=-1)
+    Y_test = np.sum(Y_test, axis=-1)
+
+
 
     # Split the trainig and testing data
     x_train, x_val, y_train, y_val = train_test_split(
@@ -110,11 +113,13 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
 
 
 if __name__ == '__main__':
-    training_dataset, validation_dataset, testing_dataset = load_data(os.path.join(os.getcwd(), 'Data', 'Parsed_Data'), train_val_data_to_load=10, test_data_to_load=10)
+    training_dataset, testing_dataset, validation_dataset = load_data(os.path.join(os.getcwd(), 'Data', 'Parsed_Data'), train_val_data_to_load=10, test_data_to_load=10)
     print(len(training_dataset))
     print(len(validation_dataset))
     print(len(testing_dataset))
-    print(testing_dataset[0])
+    print(training_dataset[0])
+    print(training_dataset[1])
+
 
 
 
