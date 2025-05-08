@@ -26,7 +26,8 @@ print(f"Using {device} device")
 def get_data_loaders(batch_size=64):
     Data = load_data(os.path.join(os.getcwd(), 'Data', 'Parsed_Data'), 
                         train_val_data_to_load=math.inf, 
-                        test_data_to_load=math.inf
+                        test_data_to_load=math.inf,
+                        faste_files_to_load=37
                         )
     
     training_dataset, validation_dataset, testing_dataset = Data
@@ -213,7 +214,7 @@ output = model.forward(input)
 print(output.shape)
 
 # %%
-i = 35
+i = 8
 print('Tissue: Predicted, True')
 for s, (y_p, y_t) in enumerate(zip(output[i], y[i])):
     print(f'{s}: {torch.exp(y_p):.1f}, {y_t:.1f}')

@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --partition=ami100
-#SBATCH --nodes=4
-#SBATCH --ntasks=16
+#SBATCH --partition=aa100
+#SBATCH --nodes=1
+#SBATCH --ntasks=4
 #SBATCH --time=12:00:00
-#SBATCH --gres=gpu:3                    # Request 3 GPUs
+#SBATCH --gres=gpu:1                    # Request 3 GPUs
 #SBATCH --job-name=Arabidopsis_Train    # Job name
 #SBATCH --output=job_output_%j.log      # Redirect output to a file with job ID
 #SBATCH --error=job_error_%j.log        # Redirect errors to a file with job ID
@@ -30,8 +30,8 @@ mkdir -p "${PWD}/output"
 # Correct output file name
 output_names="${PWD}/output/output_${SLURM_JOB_ID}_$(basename ${fileLocation})"
 
-conda activate gp
-python DNACNN.py
+conda activate ml
+python SimpleCNNTrainer.py
 
 # End timing the process
 end_time=$(date +%s)
