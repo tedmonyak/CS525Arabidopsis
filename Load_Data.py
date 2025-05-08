@@ -77,9 +77,9 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
         with open(f, "rt") as handle:
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in test_indices:
-                    Y0.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+                    Y0.append(np.array([eval(record.seq)]))
                 if i in train_val_indices:
-                    Y1.append(np.array([eval(str(s)) for s in record.seq.split(',')]))
+                    Y1.append(np.array([eval(record.seq)]))
                 if len(test_indices) > 0 and i > np.max(test_indices, 0):
                     break
         Y_test.append(Y0)

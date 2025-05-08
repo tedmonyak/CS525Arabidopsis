@@ -20,6 +20,7 @@ def generate_input_files_from_bw(bw_fnames,
         bw_map[sample] = bw_file
     bw_0 = pyBigWig.open(list(bw_map.values())[0])
     for chr_id in chr_fnames.keys():
+        print(chr_id)
         chr_fname = chr_fnames[chr_id]
         chr_len = bw_0.chroms(chr_id)
         with gzip.open(chr_fname, "rt") as handle:
@@ -33,7 +34,7 @@ def generate_input_files_from_bw(bw_fnames,
                     for sample, bw_file in bw_map.items():
                         bw = pyBigWig.open(bw_file)
                         output_faste = open(os.path.join(output_dir, (sample + '.faste')), "a")
-                        coverage = ",".join(map(str, bw.values(chr_id, bw_idx, bw_idx + seq_length)))
+                        coverage = ",".join(map(str, bw.stats(chr_id, bw_idx, bw_idx + seq_length)))
                         output_faste.write(">" + seq_id + "\n" + coverage + "\n")
                     bw_idx += interval
 
@@ -46,12 +47,12 @@ if __name__ == '__main__':
                 'Chr5': 'Data/RefGenome/Arabidopsis_thaliana.TAIR10.dna.chromosome.5.fa.gz'}
 
     bw_fnames = 'Data/chromatin_cs425/*/*.rpgc.bw'
-    output_dir = 'Data/Parsed_Data'
+    output_dir = 'Data/Parsed_Data_Mean'
     generate_input_files_from_bw(bw_fnames,
                                 output_dir,
                                 chr_fnames,
                                 seq_length=2500,
-                                interval=1250)
+                                interval=2500)
 
 
 
