@@ -1,8 +1,9 @@
 import numpy as np
-from Bio import SeqIO
 import os
-
 import torch
+
+from Bio import SeqIO
+
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
@@ -34,7 +35,8 @@ def one_hot_encode(seq):
     return oneHotEncode
 
 def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7, 
-              train_val_data_to_load:float=500, test_data_to_load:float=100):
+              train_val_data_to_load:float=500, test_data_to_load:float=100,
+              faste_files_to_load=37, normalize=False):
     # get the .fasta files in data_dir
     fasta_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'fasta' in f]
     faste_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'faste' in f]
@@ -68,7 +70,7 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
 
     Y_test = []
     Y_train_val = []
-    for f in faste_files:
+    for f in faste_files[:faste_files_to_load]:
         print(f'Loading coverage from {os.path.basename(f)}')
         Y0 = []
         Y1 = []
@@ -95,9 +97,11 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     # Discretize Y
     Y_train_val = np.sum(Y_train_val, axis=-1)
     Y_test = np.sum(Y_test, axis=-1)
-    Y_test = np.sum(Y_test, axis=-1)
 
-
+    if normalize:
+        max_val = max(np.max(Y_test), np.max(Y_train_val))
+        Y_test /= max_val
+        Y_train_val /= max_val
 
     # Split the trainig and testing data
     x_train, x_val, y_train, y_val = train_test_split(
@@ -108,6 +112,7 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     training_dataset = chromatin_dataset([(x,y) for x,y in zip(x_train, y_train)])
     validation_dataset = chromatin_dataset([(x,y) for x,y in zip(x_val, y_val)])
     testing_dataset = chromatin_dataset([(x,y) for x,y in zip(X_test, Y_test)])
+    print("Done Loading Data")
 
     return [training_dataset, validation_dataset, testing_dataset]
 
