@@ -9,7 +9,8 @@ def generate_input_files_from_bw(bw_fnames,
                                  output_dir,
                                  chr_fnames,
                                  seq_length=2500,
-                                 interval=1250):
+                                 interval=1250,
+                                 method='sum'):
     bw_map = {}
     os.makedirs(output_dir, exist_ok=True)
     output_fasta = open(os.path.join(output_dir, 'sequences.fasta'), "w")
@@ -34,7 +35,7 @@ def generate_input_files_from_bw(bw_fnames,
                     for sample, bw_file in bw_map.items():
                         bw = pyBigWig.open(bw_file)
                         output_faste = open(os.path.join(output_dir, (sample + '.faste')), "a")
-                        coverage = ",".join(map(str, bw.stats(chr_id, bw_idx, bw_idx + seq_length)))
+                        coverage = ",".join(map(str, bw.stats(chr_id, bw_idx, bw_idx + seq_length, type=method)))
                         output_faste.write(">" + seq_id + "\n" + coverage + "\n")
                     bw_idx += interval
 
