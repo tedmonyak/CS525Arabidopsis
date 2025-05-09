@@ -77,9 +77,9 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
         with open(f, "rt") as handle:
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in test_indices:
-                    Y0.append(np.array([eval(record.seq)]))
+                    Y0.append(np.array(eval(str(record.seq))))
                 if i in train_val_indices:
-                    Y1.append(np.array([eval(record.seq)]))
+                    Y1.append(np.array(eval(str(record.seq))))
                 if len(test_indices) > 0 and i > np.max(test_indices, 0):
                     break
         Y_test.append(Y0)
@@ -95,8 +95,8 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     X_train_val = np.array(X_train_val)
 
     # Discretize Y
-    Y_train_val = np.sum(Y_train_val, axis=-1)
-    Y_test = np.sum(Y_test, axis=-1)
+    # Y_train_val = np.sum(Y_train_val, axis=-1)
+    # Y_test = np.sum(Y_test, axis=-1)
 
     if normalize:
         max_val = max(np.max(Y_test), np.max(Y_train_val))
