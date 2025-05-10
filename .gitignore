@@ -2,3 +2,5 @@
 /.venv
 /Data
 /venv
+.DS_Store
+.ipynb_checkpoints/

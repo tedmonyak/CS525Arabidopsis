@@ -10,7 +10,8 @@ def generate_input_files_from_bw(bw_fnames,
                                  chr_fnames,
                                  seq_length=2500,
                                  interval=1250,
-                                 method='sum'):
+                                 method='sum',
+                                 window=2500):
     bw_map = {}
     os.makedirs(output_dir, exist_ok=True)
     output_fasta = open(os.path.join(output_dir, 'sequences.fasta'), "w")
@@ -35,7 +36,11 @@ def generate_input_files_from_bw(bw_fnames,
                     for sample, bw_file in bw_map.items():
                         bw = pyBigWig.open(bw_file)
                         output_faste = open(os.path.join(output_dir, (sample + '.faste')), "a")
-                        coverage = ",".join(map(str, bw.stats(chr_id, bw_idx, bw_idx + seq_length, type=method)))
+                        # Calculate start as midpoint - window/2
+                        start = int(bw_idx + (seq_length/2) - (window/2))
+                        # Calculate end as midpoint + window/2
+                        end = int(bw_idx + (seq_length/2) + (window/2))
+                        coverage = ",".join(map(str, bw.stats(chr_id, start, end, type=method)))
                         output_faste.write(">" + seq_id + "\n" + coverage + "\n")
                     bw_idx += interval
 
@@ -48,12 +53,13 @@ if __name__ == '__main__':
                 'Chr5': 'Data/RefGenome/Arabidopsis_thaliana.TAIR10.dna.chromosome.5.fa.gz'}
 
     bw_fnames = 'Data/chromatin_cs425/*/*.rpgc.bw'
-    output_dir = 'Data/Parsed_Data_Mean'
+    output_dir = 'Data/Parsed_Data_Window'
     generate_input_files_from_bw(bw_fnames,
                                 output_dir,
                                 chr_fnames,
                                 seq_length=2500,
-                                interval=2500)
+                                interval=1250,
+                                window=2500)
 
 
 
