@@ -37,7 +37,7 @@ def one_hot_encode(seq):
 
 def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7, 
               train_val_data_to_load:float=500, test_data_to_load:float=100,
-              faste_files_to_load=37, normalize=False):
+              faste_files_to_load=37, normalize=False, threshold=False):
     # get the .fasta files in data_dir
     fasta_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'fasta' in f]
     faste_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'faste' in f]
@@ -78,9 +78,19 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
         with open(f, "rt") as handle:
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in test_indices:
-                    Y0.append(np.array(eval(str(record.seq))))
+                    try:
+                        v = float(str(record.seq))
+                    except ValueError:
+                        print(f"Error parsing sequence in {f}, values for {i} are set to 0")
+                        v = 0
+                    Y0.append(v)
                 if i in train_val_indices:
-                    Y1.append(np.array(eval(str(record.seq))))
+                    try:
+                        v = float(str(record.seq))
+                    except ValueError:
+                        print(f"Error parsing sequence in {f}, values for {i} are set to 0")
+                        v = 0
+                    Y1.append(v)
                 if len(test_indices) > 0 and i > np.max(test_indices, 0):
                     break
         Y_test.append(Y0)
@@ -91,6 +101,14 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     Y_test = np.array(Y_test)
     Y_train_val = np.swapaxes(Y_train_val, 0, 1)
     Y_test = np.swapaxes(Y_test, 0, 1)
+
+    # threshold
+    if threshold:
+        mean_train_val = np.mean(Y_train_val, axis=0)
+        std_train_val = np.std(Y_train_val, axis=0)
+        threshold_train_val = mean_train_val + 2 * std_train_val
+        Y_train_val = np.clip(Y_train_val, None, threshold_train_val)
+        Y_test = np.clip(Y_test, None, threshold_train_val)
 
     X_test = np.array(X_test)
     X_train_val = np.array(X_train_val)
@@ -118,12 +136,13 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     return [training_dataset, validation_dataset, testing_dataset]
 
 
-def get_data_loaders(batch_size=256, faste_files_to_load=37, normalize=False, train_val_data_to_load=math.inf, test_data_to_load=math.inf):
-    Data = load_data(data_dir=os.path.join(os.getcwd(), 'Data', 'Parsed_Data_Mean'), 
+def get_data_loaders(data_dir, batch_size=256, faste_files_to_load=37, normalize=False, train_val_data_to_load=math.inf, test_data_to_load=math.inf, sum_threshold=False):
+    Data = load_data(data_dir, 
                      train_val_data_to_load=train_val_data_to_load,
                      test_data_to_load=test_data_to_load,
                      faste_files_to_load=faste_files_to_load,
-                     normalize=normalize)
+                     normalize=normalize,
+                     threshold=sum_threshold)
     
     training_dataset, validation_dataset, testing_dataset = Data
 

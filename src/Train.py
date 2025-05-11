@@ -51,6 +51,19 @@ def validation(dataloader, model, loss_fn, epoch, device):
     return validation_loss
 
 def train_model(device, train_loader, val_loader, model, optimizer, loss_fn, epochs, save_dir, patience=10):
+    def plot_loss_live(train_loss, validation_loss):
+        clear_output(wait=True)
+        plt.figure(figsize=(4,3))
+        plt.plot(np.arange(len(train_loss)), train_loss, label='Training')
+        plt.plot(np.arange(len(validation_loss)), validation_loss, label='Validation')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend()
+        plot_save_path = os.path.join(save_dir, f"loss_plot_epoch_{len(train_loss)}.png")
+        # plt.savefig(plot_save_path)
+        plt.show()
+        # plt.close()
+
     p = patience
 
     train_loss = []
@@ -73,29 +86,18 @@ def train_model(device, train_loader, val_loader, model, optimizer, loss_fn, epo
         train_loss.append(loss)
         loss = validation(val_loader, model, loss_fn, t, device)
         validation_loss.append(loss)
+        plot_loss_live(train_loss, validation_loss)
+
     
         if train_loss[-1] < validation_loss[-1]:
             # print(f"Training loss {train_loss[-1]} is less than validation loss {validation_loss[-1]}")
-
-            if train_loss[-1]/validation_loss[-1] < 0.5:
+            if train_loss[-1]/validation_loss[-1] < 0.8:
                 print(f"Training loss {train_loss[-1]} is less than half of validation loss {validation_loss[-1]}")
                 p -= 1
+        
+        if p == 0:
+            print(f"Early stopping at epoch {t}")
+            break
                 
     print("Done!")
 
-    def plot_loss_live(train_loss, validation_loss):
-        clear_output(wait=True)
-        plt.figure(figsize=(4,3))
-        plt.plot(np.arange(len(train_loss)), train_loss, label='Training')
-        plt.plot(np.arange(len(validation_loss)), validation_loss, label='Validation')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.legend()
-        plt.show()
-        
-        # Save the plot to a file
-        plot_save_path = os.path.join(save_dir, f"loss_plot_epoch_{len(train_loss)}.png")
-        plt.savefig(plot_save_path)
-        plt.close()
-
-    plot_loss_live(train_loss, validation_loss)

@@ -3,6 +3,7 @@ from Bio import SeqIO
 import os
 import gzip
 import glob
+import numpy as np
 
 
 def generate_input_files_from_bw(bw_fnames,
@@ -40,7 +41,11 @@ def generate_input_files_from_bw(bw_fnames,
                         start = int(bw_idx + (seq_length/2) - (window/2))
                         # Calculate end as midpoint + window/2
                         end = int(bw_idx + (seq_length/2) + (window/2))
-                        coverage = ",".join(map(str, bw.stats(chr_id, start, end, type=method)))
+
+                        if method != 'corrected_sum':
+                            coverage = ",".join(map(str, bw.stats(chr_id, start, end, type=method)))
+                        else:
+                            coverage = str(np.sum(bw.values(chr_id, start, end)))
                         output_faste.write(">" + seq_id + "\n" + coverage + "\n")
                     bw_idx += interval
 
