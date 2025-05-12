@@ -50,7 +50,7 @@ def validation(dataloader, model, loss_fn, epoch, device):
         print(f"Validation Loss: {validation_loss:>8f} \n")
     return validation_loss
 
-def train_model(device, train_loader, val_loader, model, optimizer, loss_fn, epochs, save_dir, patience=10):
+def train_model(train_loader, val_loader, model, optimizer, loss_fn, epochs, overfit_ratio=0.85, lr_scheduler=None, patience=5, save_dir='.', device='cpu'):
     def plot_loss_live(train_loss, validation_loss):
         clear_output(wait=True)
         plt.figure(figsize=(4,3))
@@ -88,7 +88,6 @@ def train_model(device, train_loader, val_loader, model, optimizer, loss_fn, epo
         validation_loss.append(loss)
         plot_loss_live(train_loss, validation_loss)
 
-    
         if train_loss[-1] < validation_loss[-1]:
             # print(f"Training loss {train_loss[-1]} is less than validation loss {validation_loss[-1]}")
             if train_loss[-1]/validation_loss[-1] < 0.8:
@@ -98,6 +97,9 @@ def train_model(device, train_loader, val_loader, model, optimizer, loss_fn, epo
         if p == 0:
             print(f"Early stopping at epoch {t}")
             break
+
+        if lr_scheduler is not None:
+            lr_scheduler.step()
                 
     print("Done!")
 
