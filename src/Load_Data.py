@@ -80,14 +80,14 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
             for i, record in enumerate(SeqIO.parse(handle, "fasta")):
                 if i in test_indices:
                     try:
-                        v = float(str(record.seq))
+                        v = math.log(float(str(record.seq))+1)
                     except ValueError:
                         print(f"Error parsing sequence in {f}, values for {i} are set to 0")
                         v = 0
                     Y0.append(v)
                 if i in train_val_indices:
                     try:
-                        v = float(str(record.seq))
+                        v = math.log(float(str(record.seq))+1)
                     except ValueError:
                         print(f"Error parsing sequence in {f}, values for {i} are set to 0")
                         v = 0
@@ -102,10 +102,6 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     Y_test = np.array(Y_test)
     Y_train_val = np.swapaxes(Y_train_val, 0, 1)
     Y_test = np.swapaxes(Y_test, 0, 1)
-
-    # remove 0s
-    Y_train_val = Y_train_val + 1
-    Y_test = Y_test + 1
 
     # threshold
     if upper_threshold:
