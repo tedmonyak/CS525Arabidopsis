@@ -37,7 +37,8 @@ def one_hot_encode(seq):
 
 def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7, 
               train_val_data_to_load:float=500, test_data_to_load:float=100,
-              faste_files_to_load=37, normalize=False, threshold=False):
+              faste_files_to_load=37, normalize=False, upper_threshold=False, lower_threshold=False,
+              minimum_coverage=0, maximum_coverage=1_000_000):
     # get the .fasta files in data_dir
     fasta_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'fasta' in f]
     faste_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if 'faste' in f]
@@ -102,13 +103,29 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     Y_train_val = np.swapaxes(Y_train_val, 0, 1)
     Y_test = np.swapaxes(Y_test, 0, 1)
 
+    # remove 0s
+    Y_train_val = Y_train_val + 1
+    Y_test = Y_test + 1
+
     # threshold
-    if threshold:
+    if upper_threshold:
         mean_train_val = np.mean(Y_train_val, axis=0)
         std_train_val = np.std(Y_train_val, axis=0)
-        threshold_train_val = mean_train_val + 2 * std_train_val
+        if maximum_coverage is None:
+            maximum_coverage = mean_train_val + 1 * std_train_val
+        threshold_train_val = maximum_coverage
         Y_train_val = np.clip(Y_train_val, None, threshold_train_val)
         Y_test = np.clip(Y_test, None, threshold_train_val)
+
+
+    if lower_threshold:
+        mean_train_val = np.mean(Y_train_val, axis=0)
+        std_train_val = np.std(Y_train_val, axis=0)
+        if minimum_coverage is None:
+            minimum_coverage = mean_train_val - 2 * std_train_val
+        threshold_train_val = minimum_coverage
+        Y_train_val = np.clip(Y_train_val, threshold_train_val, None)
+        Y_test = np.clip(Y_test, threshold_train_val, None)
 
     X_test = np.array(X_test)
     X_train_val = np.array(X_train_val)
@@ -136,13 +153,17 @@ def load_data(data_dir:str, test_chr:str='Chr5', train_val_split:float=0.7,
     return [training_dataset, validation_dataset, testing_dataset]
 
 
-def get_data_loaders(data_dir, batch_size=256, faste_files_to_load=37, normalize=False, train_val_data_to_load=math.inf, test_data_to_load=math.inf, sum_threshold=False):
+def get_data_loaders(data_dir, batch_size=256, faste_files_to_load=37, normalize=False, train_val_data_to_load=math.inf, test_data_to_load=math.inf, upper_threshold=False, lower_threshold=False, minimum_coverage=None, maximum_coverage=None):
     Data = load_data(data_dir, 
-                     train_val_data_to_load=train_val_data_to_load,
-                     test_data_to_load=test_data_to_load,
-                     faste_files_to_load=faste_files_to_load,
-                     normalize=normalize,
-                     threshold=sum_threshold)
+                        train_val_data_to_load=train_val_data_to_load,
+                        test_data_to_load=test_data_to_load,
+                        faste_files_to_load=faste_files_to_load,
+                        normalize=normalize,
+                        upper_threshold=upper_threshold, 
+                        lower_threshold=lower_threshold,
+                        minimum_coverage=minimum_coverage,
+                        maximum_coverage=maximum_coverage
+                     )
     
     training_dataset, validation_dataset, testing_dataset = Data
 

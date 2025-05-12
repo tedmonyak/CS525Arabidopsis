@@ -20,7 +20,7 @@ class SimpleCNN(nn.Module):
         )
         self.regression_block = nn.Sequential(
             nn.Linear(num_kernels[0], output_size),
-            nn.ReLU(),  # ReLU ensures positive outputs
+            # nn.ReLU(),  # ReLU ensures positive outputs
             # nn.LogSoftmax(dim=1)  # Apply log softmax if necessary for your task
         )  
 

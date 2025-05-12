@@ -50,7 +50,7 @@ class DNATranformer(nn.Module):
 
         self.regression_block = nn.Sequential(
             nn.Linear(num_kernels[2], output_size),
-            nn.ReLU(),  # ReLU ensures positive outputs
+            # nn.ReLU(),  # ReLU ensures positive outputs
         ) 
 
     def forward(self, x):
