@@ -1,0 +1,18 @@
+{
+    "num_kernels": [
+        512,
+        128,
+        64
+    ],
+    "kernel_size": [
+        24,
+        4,
+        4
+    ],
+    "dropout": 0.2,
+    "flatten_shape": 19648,
+    "connect_layer_size": [
+        120,
+        80
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "num_kernels": [
+        64,
+        64,
+        64
+    ],
+    "kernel_size": [
+        24,
+        16,
+        8
+    ],
+    "dropout": 0.2,
+    "num_tranformer_heads": 4,
+    "num_transformer_layers": 3
+}
